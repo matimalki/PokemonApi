@@ -10,8 +10,8 @@ def get_weather_by_lat_long(lat: float, lg: float):
     response = requests.get(
         f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lg}&hourly=temperature_2m&timezone=auto&forecast_days=1"
     )
-    logger.info(response.status_code)
     if response.status_code == 200:
+        logger.info("Se accedió correctamente a la Api")
         return response.json()
     else:
         return None

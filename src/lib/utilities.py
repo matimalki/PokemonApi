@@ -10,7 +10,6 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s %(asctime)s %(mess
 logger = logging.getLogger(__name__)
 
 
-
 def get_type_by_pokemon(pokemon_data):
     """Obtengo lista de tipos de pokemones"""
     pokemon_by_types = pokemon_data.get("types", [])
@@ -24,7 +23,7 @@ def get_type_by_pokemon(pokemon_data):
 def get_pokemon_by_types(pokemon_data):
     """Del listado de los pokemones de acuerdo al tipo se guarda en una lista los nombres de los pokemones"""
     pokemon_types = pokemon_data.get("pokemon", [])
-    logger.info("listado de pokemones por tipo", pokemon_types)
+    logger.info("Se obtuvo correctamente el listado de pokemones por tipo")
     data = []
     for pokemon in pokemon_types:
         data.append(pokemon["pokemon"]["name"])
@@ -34,35 +33,37 @@ def get_pokemon_by_types(pokemon_data):
 def get_hour_temp_from_weather(lat, long):
     """Se genera un nuevo diccionario donde se guardará hora y temperatura relacionada de acuerdo a las coordinadas enviadas"""
     weather_data = get_weather_by_lat_long(lat, long)
-    logger.info(weather_data)
+    logger.info("Se obtuvo la información del clima de acuerdo a coordenadas")
     if not weather_data:
         return (
             f"No se pudo obtener el clima para la latitud {lat} y la longitud {long}",
             404,
         )
-    lista_weather = weather_data.get("hourly")
-    logger.info(lista_weather)
-    times_weather = lista_weather.get("time")
-    logger.info(times_weather)
-    temp_weather = lista_weather.get("temperature_2m")
-    logger.info(temp_weather)
-    hora_temp = []
-    logger.info(hora_temp)
+    weather_list = weather_data.get("hourly")
+    logger.info("Accedo al diccionario hourly")
+    times_weather = weather_list.get("time")
+    logger.info("Se almaceno únicamente las horas del diccionario time")
+    temp_weather = weather_list.get("temperature_2m")
+    logger.info("Se almaceno la temperatura dentro del diccionario temperature_2m")
+    time_temp = []
     # Genero un nuevo diccionario con diccionarios dentro que contengan horario y temperatura relacionada
     for times, temp in zip(times_weather, temp_weather):
         time_hour_dic = {
             "hora": datetime.strptime(times, "%Y-%m-%dT%H:%M"),
             "temp": temp,
         }
-        hora_temp.append(time_hour_dic)
-    return hora_temp
+        time_temp.append(time_hour_dic)
+    logger.info("Se generó correctamente la lista nueva de horas y temperaturas")
+    return time_temp
 
 
 def filter_by_letters(names):
     """Funcion para filtrar por letras"""
-    letras_a_filtrar = {"I", "A", "M"}
+    letters_to_filter = {"I", "A", "M"}
     return [
-        name for name in names if any(char.upper() in letras_a_filtrar for char in name)
+        name
+        for name in names
+        if any(char.upper() in letters_to_filter for char in name)
     ]
 
 
@@ -72,18 +73,16 @@ def get_random_pokemons_by_letters(name):
     if not pokemon_data:
         return f"El tipo de Pokemon {name} no existe", 404
     pokemon_by_types = get_pokemon_by_types(pokemon_data)
-    logger.info("Listado de pokemones a filtrar", pokemon_by_types)
-    filtro_pokemon = filter_by_letters(pokemon_by_types)
-    logger.info("Listado de pokemones filtrados", filtro_pokemon)
-    valor_aleatorio = random.choice(filtro_pokemon)
-    return valor_aleatorio
-
+    logger.info("Se listaron correctamente los pokemons a filtrar")
+    pokemon_filter = filter_by_letters(pokemon_by_types)
+    logger.info("Se filtró correctamente el pokemon")
+    random_value = random.choice(pokemon_filter)
+    return random_value
 
 
 def find_closest_datetime(current: datetime, datetimes: list[dict]) -> dict:
     """Obtengo la fecha más cercana a la actual"""
     return min(datetimes, key=lambda dt: abs(current - dt.get("hora")))
-
 
 
 def get_pokemon_type_by_temp(temperature: float):

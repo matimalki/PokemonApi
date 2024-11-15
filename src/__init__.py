@@ -1,11 +1,10 @@
 import logging
-from flask import Flask
+from apiflask import APIFlask
 from src.routes import pokemon_bp
 
 
 def create_app():
-    app = Flask(__name__)
-
+    app = APIFlask(__name__)
     # Configurar logger global
     logging.basicConfig(
         level=logging.INFO,  # Nivel global de logging
