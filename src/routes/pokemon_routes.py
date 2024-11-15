@@ -21,17 +21,31 @@ logger = logging.getLogger("pokemon_routes")
 
 
 class Pokemon(Schema):
+    """Clase para primer endpoint"""
     pokemon_name = String()
     pokemon_types = List(String())
 
 
-class Pokemon_by_temp(Schema):
-    lat = Float()
-    long = Float()
+class LocationParams(Schema):
+    """Clase para ultimo endpoint"""
+    lat = Float(required=True)
+    long = Float(required=True)
 
+class RandomPoke(Schema):
+    """Clase para segundo endpoint"""
+    pokemon_name = String()
+
+class PokeLargestName(Schema):
+    """Clase para tercer endpoint"""
+    pokemon_name = String()
+
+class RandomPokeByTemp(Schema):
+    """Clase para cuarto endpoint"""
+    random_pokemon = String()
+    pokemon_type = String()    
 
 @pokemon_bp.route("/<name>", methods=["GET"])
-@pokemon_bp.output(Pokemon())
+@pokemon_bp.output(Pokemon)
 @pokemon_bp.doc(responses=[200, 404, 401, 500])
 def get_pokemon(name):
     """Se obtiene el tipo de pokemon de acuerdo a su nombre"""
@@ -49,16 +63,18 @@ def get_pokemon(name):
 
 
 @pokemon_bp.route("/types/<name>", methods=["GET"])
+@pokemon_bp.output(RandomPoke)
+@pokemon_bp.doc(responses=[200, 404, 401, 500])
 def get_random_pokemon_by_type(name):
     """De acuerdo al tipo de pokemon colocado en el endpoint, arroja un nombre random de ese mismo tipo"""
     pokemon_data = get_type(name)
     logger.info("Se obtuvo correctamente el listado de pokemones por tipo")
     if pokemon_data == 404:
-        return f"El tipo de Pokemon {name} no existe", 404
+        abort(404, message=f"El tipo de Pokemon {name} no existe")
     elif pokemon_data == 401:
-        return "Acceso no autorizado", 401
+        abort(401, message=f"Acceso no autorizado")
     elif pokemon_data == 500:
-        return "Error interno del servidor", 500
+        abort(500, message=f"Error interno del servidor")
     else:
         pokemon_by_types = get_pokemon_by_types(pokemon_data)
         logger.info("Se obtuvo correctamente la información del pokemon")
@@ -67,15 +83,17 @@ def get_random_pokemon_by_type(name):
 
 
 @pokemon_bp.route("/largest_name/<pokemon_type>", methods=["GET"])
+@pokemon_bp.output(PokeLargestName)
+@pokemon_bp.doc(responses=[200, 404, 401, 500])
 def get_largest_name_by_type(pokemon_type):
     """Se obtiene el nombre más largo de pokemon de acuerdo a su tipo especificado en el endpoint"""
     pokemon_data = get_type(pokemon_type)
     if pokemon_data == 404:
-        return f"El tipo de Pokemon {pokemon_type} no existe", 404
+        abort(404, message=f"El tipo de Pokemon {pokemon_type} no existe")
     elif pokemon_data == 401:
-        return "Acceso no autorizado", 401
+        abort(401, message=f"Acceso no autorizado")
     elif pokemon_data == 500:
-        return "Error interno del servidor", 500
+        abort(500, message=f"Error interno del servidor")
     else:
         pokemon_by_types = get_pokemon_by_types(pokemon_data)
         logger.info("Se obtuvo correctamente el nombre más largo del pokemon")
@@ -83,12 +101,11 @@ def get_largest_name_by_type(pokemon_type):
 
 
 @pokemon_bp.route("/random_by_temp", methods=["GET"])
-@pokemon_bp.input(Pokemon_by_temp, location="query")
+@pokemon_bp.input(LocationParams, location="query")
+@pokemon_bp.output(RandomPokeByTemp)
 def random_pokemon(query_data):
     lat = query_data.get("lat")
     long = query_data.get("long")
-    if not lat or not long:
-        return "Falta latitud y longitud", 400
     # guardo diccionario con hora y temperatura agrupada
     hour_y_temp_list = get_hour_temp_from_weather(float(lat), float(long))
     logger.info(
@@ -97,10 +114,10 @@ def random_pokemon(query_data):
     # obtengo el diccionario cuya hora se encuentre más cercana a la actual
     closest_hour_temp = find_closest_datetime(datetime.now(), hour_y_temp_list)
     logger.info(
-        f"Se encontró y almacenó la hora y temperatura cercana y es: {closest_hour_temp.get("hour")}"
+        f"Se encontró y almacenó la hora y temperatura cercana y es: {closest_hour_temp}"
     )
     # Si no se encuentra ningun pokemon de acuerdo a la temperatura arroja error
-    if closest_hour_temp == "Unknown":
+    if closest_hour_temp.get("hora") == "Unknown":
         return "No se pudo obtener la temperatura actual", 404
     # De acuerdo a la temperatura obtenida, devuelvo el tipo de pokemon a buscar
     pokemon_type = get_pokemon_type_by_temp(closest_hour_temp.get("temp"))
