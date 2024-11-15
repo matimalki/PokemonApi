@@ -1,4 +1,4 @@
-from flask import jsonify, request
+from flask import jsonify
 import random
 import logging
 from apiflask import Schema, APIBlueprint, abort
@@ -23,6 +23,7 @@ logger = logging.getLogger("pokemon_routes")
 class Pokemon(Schema):
     pokemon_name = String()
     pokemon_types = List(String())
+
 
 class Pokemon_by_temp(Schema):
     lat = Float()
@@ -82,7 +83,7 @@ def get_largest_name_by_type(pokemon_type):
 
 
 @pokemon_bp.route("/random_by_temp", methods=["GET"])
-@pokemon_bp.input(Pokemon_by_temp,location="query")
+@pokemon_bp.input(Pokemon_by_temp, location="query")
 def random_pokemon(query_data):
     lat = query_data.get("lat")
     long = query_data.get("long")
