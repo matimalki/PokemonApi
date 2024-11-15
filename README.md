@@ -1,1 +1,1 @@
-Para entrar a la documentación, ingresar /docs en la url
+Para entrar a la documentación: ingresar /docs en la url
